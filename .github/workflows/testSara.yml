@@ -1,0 +1,32 @@
+name: Prava CKB
+
+on:
+  push:
+    paths:
+      - 'ex.java'
+
+jobs:
+  send-to-platform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Visualizza il percorso del file
+        run: |
+          ls -la
+          echo "Contenuto della cartella:"
+          ls -laR
+
+      - name: Visualizza il contenuto del file
+        run: |
+          cat ex.java
+
+      - name: Ottieni l'email del committer
+        id: get_commit_email
+        run: echo "::set-output name=email::$(git log -1 --pretty=format:'%ae')"
+
+      - name: Invia richiesta POST alla piattaforma
+        run: |
+          python3 -c 'import json,sys; content=sys.stdin.read(); print(json.dumps({"file_content": content, "repository_name": "'${{ github.event.repository.name }}'", "user_email": "'${{ steps.get_commit_email.outputs.email }}'", "user_username": "'${{ github.repository_owner }}'" } ))' < ex.java | curl -X POST -H "Content-Type: application/json" -d @- https://a8a1-176-200-221-129.ngrok-free.app/student/battle/commit
